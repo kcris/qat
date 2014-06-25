@@ -21,7 +21,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     CollectionModel.h \
     OptionsDialog.h \
-    Catalog.h
+    Catalog.h \
+    Tree.hpp
 
 FORMS    += mainwindow.ui \
     OptionsDialog.ui

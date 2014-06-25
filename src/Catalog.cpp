@@ -29,6 +29,25 @@
 
 
 //
+// generate .db catalog file
+//
+// updatedb -U dirName -o fileName
+//
+bool saveCatalog(const QString &dirName, const QString &fileName)
+{
+  QProcess process;
+  //process.setProcessChannelMode(QProcess::MergedChannels);
+  process.start(QString("updatedb -U %1 -o %2").arg(dirName).arg(fileName), QIODevice::ReadWrite);
+  if(!process.waitForStarted())
+    return false;
+  if(!process.waitForFinished())
+    return false;
+
+  return true;
+}
+
+
+//
 // print contents of .db catalog file
 //
 // locate -d fileName -P *
@@ -55,11 +74,10 @@ QStringList loadCatalog(const QString & fileName)
   return items;
 }
 
-TreeNode<QString>* buildTreePath(const QStringList & paths)
-{
-  TreeNode<QString>* root = new TreeNode<QString>("/");
 
-  TreeNode<QString>* current = root;
+void buildTreePath(TreeNode<QString>* pParent, const QStringList & paths)
+{
+  TreeNode<QString>* current = pParent;
 
   foreach (const QString & path, paths)
   {
@@ -73,25 +91,6 @@ TreeNode<QString>* buildTreePath(const QStringList & paths)
     current = node;
   }
 
-  //root->accept(new PrintIndentedVisitor(0));
-
-  return root;
+  //pParent->accept(new PrintIndentedVisitor(0));
 }
 
-//
-// generate .db catalog file
-//
-// updatedb -U dirName -o fileName
-//
-bool saveCatalog(const QString &dirName, const QString &fileName)
-{
-  QProcess process;
-  //process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("updatedb -U %1 -o %2").arg(dirName).arg(fileName), QIODevice::ReadWrite);
-  if(!process.waitForStarted())
-    return false;
-  if(!process.waitForFinished())
-    return false;
-
-  return true;
-}

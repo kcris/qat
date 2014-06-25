@@ -1,24 +1,50 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QSortFilterProxyModel>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFileSystemModel>
 #include "CollectionModel.h"
 #include "OptionsDialog.h"
 
+
+//
+//proxy model that hides some columns inside QFileSystemModel
+//
+struct FSMProxy : public QSortFilterProxyModel
+{
+  FSMProxy(QObject *parent) : QSortFilterProxyModel(parent) {}
+
+private:
+  virtual bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const
+  {
+    return source_column == 0; //only show 'Name' column inside the target QFileSystemModel
+  }
+};
+
+
+/*
+ * application's main window
+ */
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
 
+  ui->splitter->setStretchFactor(1, 2);
+
   //setup collection treeview
   QFileSystemModel *model = new QFileSystemModel();
   model->setRootPath(QDir::currentPath());
   //model->setFilter(QDir::AllDirs | QDir::Files);
   model->setNameFilters(QStringList() << "*.db");
-  ui->treeViewCollection->setModel(model);
+  model->setNameFilterDisables(false);
+
+  FSMProxy *proxyModel = new FSMProxy(this);
+  proxyModel->setSourceModel(model);
+  ui->treeViewCollection->setModel(proxyModel);
 
   //setup catalog treeview
   //CollectionModel* colModel = new CollectionModel();
@@ -108,10 +134,12 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
 
  if (!paths.empty())
  {
-   TreeNode<QString>* pRoot = buildTreePath(paths);
+   TreeNode<QString>* pCatalogRoot = new TreeNode<QString>(selectedText);
+
+   buildTreePath(pCatalogRoot, paths);
 
    ui->treeViewContents; //must display pRoot
 
-   delete pRoot;
+   delete pCatalogRoot;
  }
 }
