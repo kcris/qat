@@ -5,9 +5,9 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFileSystemModel>
-#include "CollectionModel.h"
+#include "TreeModel.h"
 #include "OptionsDialog.h"
-
+#include "Catalog.h"
 
 //
 //proxy model that hides some columns inside QFileSystemModel
@@ -20,6 +20,14 @@ private:
   virtual bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const
   {
     return source_column == 0; //only show 'Name' column inside the target QFileSystemModel
+  }
+  virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const
+  {
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+      if (section == 0)
+        return "Collection";
+
+    return QVariant();
   }
 };
 
@@ -47,8 +55,8 @@ MainWindow::MainWindow(QWidget *parent)
   ui->treeViewCollection->setModel(proxyModel);
 
   //setup catalog treeview
-  //CollectionModel* colModel = new CollectionModel();
-  //ui->treeViewContents->setModel(colModel);
+  TreeModel* colModel = new TreeModel();
+  ui->treeViewContents->setModel(colModel);
 
 
   //selection changes shall trigger a slot
@@ -107,6 +115,25 @@ void MainWindow::on_lineEditFilterContents_returnPressed()
   //filter catalogs contents
 }
 
+void buildTreePath(TreeModelItem* pParent, const QStringList & paths)
+{
+  TreeModelItem* current = pParent;
+
+  foreach (const QString & path, paths)
+  {
+    TreeModelItem * node = current;
+
+    foreach (const QString & data, path.split("/"))
+    {
+      current = current->addChild(data);
+    }
+
+    current = node;
+  }
+
+  //pParent->accept(new PrintIndentedVisitor(0));
+}
+
 void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, const QItemSelection & /*oldSelection*/)
 {
   //get the text of the selected item
@@ -125,21 +152,24 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
  QString showString = QString("%1, Level %2").arg(selectedText).arg(hierarchyLevel);
  setWindowTitle(showString);
 
- const QStringList & paths = loadCatalog(selectedText);
 
- // QStringList paths;
- // paths.append("x1/x2/x3");
- // paths.append("x1/x2/x4");
- // paths.append("x1/x5");
+#ifndef QT_NO_DEBUG
+  QStringList paths;
+  paths.append("x1/x2/x3");
+  paths.append("x1/x2/x4");
+  paths.append("x1/x5");
+#else
+ const QStringList & paths = loadCatalog(selectedText);
+#endif
+
 
  if (!paths.empty())
  {
-   TreeNode<QString>* pCatalogRoot = new TreeNode<QString>(selectedText);
+   TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
+   //model->add(selectedText);
 
-   buildTreePath(pCatalogRoot, paths);
-
-   ui->treeViewContents; //must display pRoot
-
-   delete pCatalogRoot;
+   TreeModelItem* pNewItem = new TreeModelItem(selectedText);
+   buildTreePath(pNewItem, paths);
+   model->add(pNewItem);
  }
 }

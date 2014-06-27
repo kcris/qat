@@ -75,22 +75,22 @@ QStringList loadCatalog(const QString & fileName)
 }
 
 
-void buildTreePath(TreeNode<QString>* pParent, const QStringList & paths)
-{
-  TreeNode<QString>* current = pParent;
+//void buildTreePath(TreeNode<QString>* pParent, const QStringList & paths)
+//{
+//  TreeNode<QString>* current = pParent;
 
-  foreach (const QString & path, paths)
-  {
-    TreeNode<QString> * node = current;
+//  foreach (const QString & path, paths)
+//  {
+//    TreeNode<QString> * node = current;
 
-    foreach (const QString & data, path.split("/"))
-    {
-      current = current->child(data);
-    }
+//    foreach (const QString & data, path.split("/"))
+//    {
+//      current = current->child(data);
+//    }
 
-    current = node;
-  }
+//    current = node;
+//  }
 
-  //pParent->accept(new PrintIndentedVisitor(0));
-}
+//  //pParent->accept(new PrintIndentedVisitor(0));
+//}
 

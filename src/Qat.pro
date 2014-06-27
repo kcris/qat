@@ -14,15 +14,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    CollectionModel.cpp \
     OptionsDialog.cpp \
-    Catalog.cpp
+    Catalog.cpp \
+    TreeModel.cpp
 
 HEADERS  += mainwindow.h \
     CollectionModel.h \
     OptionsDialog.h \
     Catalog.h \
-    Tree.hpp
+    TreeModelItem.h \
+    TreeModel.h
 
 FORMS    += mainwindow.ui \
     OptionsDialog.ui
