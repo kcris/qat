@@ -11,19 +11,19 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Qat
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    OptionsDialog.cpp \
+    ui/mainwindow.cpp \
+    ui/OptionsDialog.cpp \
     Catalog.cpp \
     TreeModel.cpp
 
-HEADERS  += mainwindow.h \
-    CollectionModel.h \
-    OptionsDialog.h \
+HEADERS += \
+    ui/mainwindow.h \
+    ui/OptionsDialog.h \
     Catalog.h \
-    TreeModelItem.h \
-    TreeModel.h
+    TreeModel.h \
+    TreeModelItem.h
 
-FORMS    += mainwindow.ui \
-    OptionsDialog.ui
+FORMS += \
+    ui/mainwindow.ui \
+    ui/OptionsDialog.ui
