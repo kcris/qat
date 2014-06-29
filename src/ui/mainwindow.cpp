@@ -105,7 +105,9 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_lineEditFilterCollection_returnPressed()
 {
   //filter collection directories
-  QFileSystemModel* pModel = dynamic_cast<QFileSystemModel*>(ui->treeViewCollection->model());
+  FSMProxy* pProxyModel = dynamic_cast<FSMProxy*>(ui->treeViewCollection->model());
+  Q_ASSERT(pProxyModel);
+  QFileSystemModel* pModel = dynamic_cast<QFileSystemModel*>(pProxyModel->sourceModel());
   Q_ASSERT(pModel);
   pModel->setNameFilters(QStringList() << ui->lineEditFilterCollection->text());
 }
@@ -153,14 +155,22 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
  setWindowTitle(showString);
 
 
-#ifndef QT_NO_DEBUG
-  QStringList paths;
-  paths.append("x1/x2/x3");
-  paths.append("x1/x2/x4");
-  paths.append("x1/x5");
-#else
- const QStringList & paths = loadCatalog(selectedText);
-#endif
+ FSMProxy* pProxyModel = dynamic_cast<FSMProxy*>(ui->treeViewCollection->model());
+ Q_ASSERT(pProxyModel);
+ QFileSystemModel* pModel = dynamic_cast<QFileSystemModel*>(pProxyModel->sourceModel());
+ Q_ASSERT(pModel);
+ const QFileInfo & fi = pModel->fileInfo(pProxyModel->mapToSource(index));
+
+ const QString & filepath = fi.absoluteFilePath();
+
+//#ifndef QT_NO_DEBUG
+//  QStringList paths;
+//  paths.append("x1/x2/x3");
+//  paths.append("x1/x2/x4");
+//  paths.append("x1/x5");
+//#else
+ const QStringList & paths = loadCatalog(filepath);
+//#endif
 
 
  if (!paths.empty())
@@ -168,7 +178,7 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
    TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
    //model->add(selectedText);
 
-   TreeModelItem* pNewItem = new TreeModelItem(selectedText);
+   TreeModelItem* pNewItem = new TreeModelItem(filepath);
    buildTreePath(pNewItem, paths);
    model->add(pNewItem);
  }

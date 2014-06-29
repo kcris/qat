@@ -27,6 +27,7 @@
 //  }
 //};
 
+static const QString path = "d:/bin/cygwin64/bin"; //TODO - use QSettings to store this
 
 //
 // generate .db catalog file
@@ -35,9 +36,13 @@
 //
 bool saveCatalog(const QString &dirName, const QString &fileName)
 {
+  QString updatedbCmd = "updatedb";
+  if (!path.isEmpty())
+    updatedbCmd = path + "/" + updatedbCmd;
+
   QProcess process;
   //process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("updatedb -U %1 -o %2").arg(dirName).arg(fileName), QIODevice::ReadWrite);
+  process.start(QString("%1 -U %2 -o %3").arg(updatedbCmd).arg(dirName).arg(fileName), QIODevice::ReadWrite);
   if(!process.waitForStarted())
     return false;
   if(!process.waitForFinished())
@@ -57,9 +62,13 @@ QStringList loadCatalog(const QString & fileName)
   if (!QFile::exists(fileName))
     return QStringList();
 
+  QString locateCmd = "locate";
+  if (!path.isEmpty())
+    locateCmd = path + "/" + locateCmd;
+
   QProcess process;
   process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("locate -d %1 -P *").arg(fileName), QIODevice::ReadWrite);
+  process.start(QString("%1 -d %2 -P *").arg(locateCmd).arg(fileName), QIODevice::ReadWrite);
   if(!process.waitForStarted())
     return QStringList();
 
