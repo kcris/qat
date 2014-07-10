@@ -10,6 +10,7 @@ It is used to create catalog files (.db) containing the list of files in a speci
 Multiple such catalogs are displayed as a searchable collection.
 
 
+
 ### Code status
 
 * [![build status](https://secure.travis-ci.org/kcris/qat.png)](https://travis-ci.org/kcris/qat)
