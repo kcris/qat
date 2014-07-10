@@ -1,7 +1,7 @@
 Qat
 ===
 
-Qt5 based file catalog software
+Qt5 based file catalog software.
 
 This is a simple frontend to locate/updatedb utilities.
 
