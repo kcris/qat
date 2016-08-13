@@ -173,9 +173,11 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
 //#endif
 
 
+ TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
+ model->clear();
+
  if (!paths.empty())
  {
-   TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
    //model->add(selectedText);
 
    TreeModelItem* pNewItem = new TreeModelItem(filepath);

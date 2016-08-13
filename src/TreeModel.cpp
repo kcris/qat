@@ -36,8 +36,18 @@ TreeModel::TreeModel(QObject* parent)
 
 TreeModel::~TreeModel()
 {
+  clear();
   delete m_priv->m_pRootItem;
   delete m_priv;
+}
+
+void TreeModel::clear()
+{
+  beginResetModel();
+
+  m_priv->m_pRootItem->removeChilds();
+
+  endResetModel();
 }
 
 void TreeModel::add(const QString & data)

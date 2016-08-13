@@ -12,6 +12,8 @@ public:
   TreeModel(QObject* parent = 0);
   virtual ~TreeModel();
 
+  void clear();
+
   void add(const QString & data); //toplevel item
   void add(TreeModelItem* pNewItem); //toplevel item
 

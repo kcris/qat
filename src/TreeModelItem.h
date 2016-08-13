@@ -13,8 +13,7 @@ struct TreeModelItem
 
   virtual ~TreeModelItem()
   {
-    for (std::vector<TreeModelItem*>::const_iterator it = m_vChildItems.begin(), itEnd = m_vChildItems.end(); it != itEnd; ++it)
-      delete *it;
+    removeChilds();
   }
 
   TreeModelItem* addChild(const QString & data)
@@ -38,6 +37,13 @@ struct TreeModelItem
     pNewItem->setParent(this);
     m_vChildItems.push_back(pNewItem);
     return pNewItem;
+  }
+
+  void removeChilds()
+  {
+    for (std::vector<TreeModelItem*>::const_iterator it = m_vChildItems.begin(), itEnd = m_vChildItems.end(); it != itEnd; ++it)
+      delete *it;
+    m_vChildItems.clear();
   }
 
   void setParent(TreeModelItem* pParent)                    {m_pParentItem = pParent;}
