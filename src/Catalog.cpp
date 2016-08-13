@@ -27,12 +27,12 @@
 //  }
 //};
 
-static const QString path = "d:/bin/cygwin64/bin"; //TODO - use QSettings to store this
+static const QString path = ""; //d:/bin/cygwin64/bin"; //TODO - use QSettings to store this
 
 //
 // generate .db catalog file
 //
-// updatedb -U dirName -o fileName
+// updatedb -U inputDir -o outputFile.db
 //
 bool saveCatalog(const QString &dirName, const QString &fileName)
 {
@@ -51,11 +51,12 @@ bool saveCatalog(const QString &dirName, const QString &fileName)
   return true;
 }
 
+//#define USE_READLINE
 
 //
 // print contents of .db catalog file
 //
-// locate -d fileName -P *
+// locate -d inputFile.db -P *
 //
 QStringList loadCatalog(const QString & fileName)
 {
@@ -74,11 +75,18 @@ QStringList loadCatalog(const QString & fileName)
 
   QStringList items;
 
+#ifdef USE_READLINE
   while(process.waitForReadyRead())
     items.append(process.readLine());
+#endif
 
   if(!process.waitForFinished())
-    return QStringList();
+    return items;
+
+#ifndef USE_READLINE
+  const QByteArray output(process.readAllStandardOutput());
+  items = QString(output).split("\n");
+#endif
 
   return items;
 }
