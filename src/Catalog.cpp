@@ -34,7 +34,7 @@ static const QString path = ""; //d:/bin/cygwin64/bin"; //TODO - use QSettings t
 //
 // updatedb -U inputDir -o outputFile.db
 //
-bool saveCatalog(const QString &dirName, const QString &fileName)
+bool saveCatalog(const QString &dirName, const QString &catalogFile)
 {
   QString updatedbCmd = "updatedb";
   if (!path.isEmpty())
@@ -42,7 +42,7 @@ bool saveCatalog(const QString &dirName, const QString &fileName)
 
   QProcess process;
   //process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("%1 -U %2 -o %3").arg(updatedbCmd).arg(dirName).arg(fileName), QIODevice::ReadWrite);
+  process.start(QString("%1 -U %2 -o %3").arg(updatedbCmd).arg(dirName).arg(catalogFile), QIODevice::ReadWrite);
   if(!process.waitForStarted())
     return false;
   if(!process.waitForFinished())
@@ -58,9 +58,9 @@ bool saveCatalog(const QString &dirName, const QString &fileName)
 //
 // locate -d inputFile.db -P *
 //
-QStringList loadCatalog(const QString & fileName)
+QStringList loadCatalog(const QString & catalogFile)
 {
-  if (!QFile::exists(fileName))
+  if (!QFile::exists(catalogFile))
     return QStringList();
 
   QString locateCmd = "locate";
@@ -69,7 +69,7 @@ QStringList loadCatalog(const QString & fileName)
 
   QProcess process;
   process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("%1 -d %2 -P *").arg(locateCmd).arg(fileName), QIODevice::ReadWrite);
+  process.start(QString("%1 -d %2 -P *").arg(locateCmd).arg(catalogFile), QIODevice::ReadWrite);
   if(!process.waitForStarted())
     return QStringList();
 
@@ -90,24 +90,3 @@ QStringList loadCatalog(const QString & fileName)
 
   return items;
 }
-
-
-//void buildTreePath(TreeNode<QString>* pParent, const QStringList & paths)
-//{
-//  TreeNode<QString>* current = pParent;
-
-//  foreach (const QString & path, paths)
-//  {
-//    TreeNode<QString> * node = current;
-
-//    foreach (const QString & data, path.split("/"))
-//    {
-//      current = current->child(data);
-//    }
-
-//    current = node;
-//  }
-
-//  //pParent->accept(new PrintIndentedVisitor(0));
-//}
-

@@ -151,8 +151,6 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
      hierarchyLevel++;
  }
 
- QString showString = QString("%1, Level %2").arg(selectedText).arg(hierarchyLevel);
- setWindowTitle(showString);
 
 
  FSMProxy* pProxyModel = dynamic_cast<FSMProxy*>(ui->treeViewCollection->model());
@@ -171,6 +169,9 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
 //#else
  const QStringList & paths = loadCatalog(filepath);
 //#endif
+
+ QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
+ setWindowTitle(showString);
 
 
  TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
