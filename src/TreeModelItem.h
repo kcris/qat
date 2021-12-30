@@ -1,6 +1,10 @@
 #ifndef TREEMODELITEM_H
 #define TREEMODELITEM_H
 
+#include <QtCore/QtGlobal>
+#include <QtCore/QString>
+#include <QtCore/QVariant>
+
 #include <vector>
 
 struct TreeModelItem

@@ -71,16 +71,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionOpen_Collection_triggered()
 {
-  const QString & dir = QFileDialog::getExistingDirectory(this, tr("Open Collection"), QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+  //const QString & dir = QFileDialog::getExistingDirectory(this, tr("Open Catalog"), QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+  const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Open Catalog"), QDir::currentPath(), "*.db");
 
-  QMessageBox::information(this, "Directory", dir);
+  QMessageBox::information(this, "LocateDb", catalogFile);
+
+  const QStringList & paths = loadCatalog(catalogFile);
+
+  showCollection(catalogFile, paths);
 }
 
 void MainWindow::on_actionAdd_Catalog_triggered()
 {
   const QString & fileName = QFileDialog::getSaveFileName(this, tr("Create Catalog"), QDir::currentPath(), tr("Catalog Files (*.db)"));
 
-  QMessageBox::information(this, "File", fileName);
+  const QFileInfo & fi = getBrowsed();
+
+  QMessageBox::information(this, "LocateDb", QString("inputDir=%1 output=%2").arg(fi.absolutePath()).arg(fileName));
+
+  saveCatalog(fi.absolutePath(), fileName);
 }
 
 void MainWindow::on_actionOptions_triggered()
@@ -136,6 +145,36 @@ void buildTreePath(TreeModelItem* pParent, const QStringList & paths)
   //pParent->accept(new PrintIndentedVisitor(0));
 }
 
+QFileInfo MainWindow::getBrowsed()
+{
+    const QModelIndex index = ui->treeViewCollection->selectionModel()->currentIndex();
+
+    FSMProxy* pProxyModel = dynamic_cast<FSMProxy*>(ui->treeViewCollection->model());
+    Q_ASSERT(pProxyModel);
+
+    QFileSystemModel* pModel = dynamic_cast<QFileSystemModel*>(pProxyModel->sourceModel());
+    Q_ASSERT(pModel);
+
+    const QFileInfo & fi = pModel->fileInfo(pProxyModel->mapToSource(index));
+
+    return fi;
+}
+
+void MainWindow::showCollection(QString inputDir, const QStringList & paths)
+{
+    TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
+    model->clear();
+
+    if (!paths.empty())
+    {
+      //model->add(selectedText);
+
+      TreeModelItem* pNewItem = new TreeModelItem(inputDir);
+      buildTreePath(pNewItem, paths);
+      model->add(pNewItem);
+    }
+}
+
 void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, const QItemSelection & /*oldSelection*/)
 {
   //get the text of the selected item
@@ -151,13 +190,7 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
      hierarchyLevel++;
  }
 
-
-
- FSMProxy* pProxyModel = dynamic_cast<FSMProxy*>(ui->treeViewCollection->model());
- Q_ASSERT(pProxyModel);
- QFileSystemModel* pModel = dynamic_cast<QFileSystemModel*>(pProxyModel->sourceModel());
- Q_ASSERT(pModel);
- const QFileInfo & fi = pModel->fileInfo(pProxyModel->mapToSource(index));
+ const QFileInfo & fi = getBrowsed();
 
  const QString & filepath = fi.absoluteFilePath();
 
@@ -173,16 +206,5 @@ void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, co
  QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
  setWindowTitle(showString);
 
-
- TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
- model->clear();
-
- if (!paths.empty())
- {
-   //model->add(selectedText);
-
-   TreeModelItem* pNewItem = new TreeModelItem(filepath);
-   buildTreePath(pNewItem, paths);
-   model->add(pNewItem);
- }
+ showCollection(filepath, paths);
 }

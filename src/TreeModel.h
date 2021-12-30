@@ -12,6 +12,12 @@ public:
   TreeModel(QObject* parent = 0);
   virtual ~TreeModel();
 
+  enum enColumns
+  {
+    enColFilename,
+    enColLast
+  };
+
   void clear();
 
   void add(const QString & data); //toplevel item

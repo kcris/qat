@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtCore/QFileInfo>
 #include <QMainWindow>
 #include <QItemSelection>
 
@@ -28,6 +29,10 @@ private slots:
 
 private slots:
   void onCollectionChanged(const QItemSelection &, const QItemSelection &);
+
+private:
+  QFileInfo getBrowsed();
+  void showCollection(QString inputDir, const QStringList & paths);
 
 private:
   Ui::MainWindow *ui;

@@ -4,7 +4,7 @@
 #include <QString>
 
 //write catalog file
-bool saveCatalog(const QString & dirName, const QString & catalogFile);
+QStringList saveCatalog(const QString & dirName, const QString & catalogFile);
 
 //load catalog file (return a list of paths)
 QStringList loadCatalog(const QString & catalogFile);

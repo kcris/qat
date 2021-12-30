@@ -27,28 +27,48 @@
 //  }
 //};
 
-static const QString path = ""; //d:/bin/cygwin64/bin"; //TODO - use QSettings to store this
+static QStringList runCmd(const QString & cmdLine)
+{
+    QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    process.start(cmdLine, QIODevice::ReadWrite);
+    if(!process.waitForStarted())
+      throw std::runtime_error("cannot start process");
+
+    if(!process.waitForFinished())
+      throw std::runtime_error("cannot finish process");
+
+    const QByteArray output(process.readAllStandardOutput());
+    return QString(output).split("\n");
+}
+
+static QString getPath(QString path)
+{
+#ifdef Q_OS_WIN
+    QString cmdLine = QString("wsl wslpath -a -u %1").arg(path);
+
+    QStringList lines = runCmd(cmdLine);
+
+    return lines[0];
+#else
+    return path;
+#endif
+}
 
 //
 // generate .db catalog file
 //
 // updatedb -U inputDir -o outputFile.db
 //
-bool saveCatalog(const QString &dirName, const QString &catalogFile)
+QStringList saveCatalog(const QString &dirName, const QString &catalogFile)
 {
-  QString updatedbCmd = "updatedb";
-  if (!path.isEmpty())
-    updatedbCmd = path + "/" + updatedbCmd;
+  QString theInputDir = getPath(dirName);
+  QString theLocateDb = getPath(catalogFile);
 
-  QProcess process;
-  //process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("%1 -U %2 -o %3").arg(updatedbCmd).arg(dirName).arg(catalogFile), QIODevice::ReadWrite);
-  if(!process.waitForStarted())
-    return false;
-  if(!process.waitForFinished())
-    return false;
-
-  return true;
+  QString cmdLine = QString("wsl updatedb --require-visibility 0 -U %1 -o %2")
+          .arg(theInputDir)
+          .arg(theLocateDb);
+  return runCmd(cmdLine);
 }
 
 //#define USE_READLINE
@@ -63,30 +83,9 @@ QStringList loadCatalog(const QString & catalogFile)
   if (!QFile::exists(catalogFile))
     return QStringList();
 
-  QString locateCmd = "locate";
-  if (!path.isEmpty())
-    locateCmd = path + "/" + locateCmd;
+  QString theLocateDb = getPath(catalogFile);
 
-  QProcess process;
-  process.setProcessChannelMode(QProcess::MergedChannels);
-  process.start(QString("%1 -d %2 -P *").arg(locateCmd).arg(catalogFile), QIODevice::ReadWrite);
-  if(!process.waitForStarted())
-    return QStringList();
-
-  QStringList items;
-
-#ifdef USE_READLINE
-  while(process.waitForReadyRead())
-    items.append(process.readLine());
-#endif
-
-  if(!process.waitForFinished())
-    return items;
-
-#ifndef USE_READLINE
-  const QByteArray output(process.readAllStandardOutput());
-  items = QString(output).split("\n");
-#endif
-
-  return items;
+  QString cmdLine = QString("wsl locate -P * -d %1")
+          .arg(theLocateDb);
+  return runCmd(cmdLine);
 }

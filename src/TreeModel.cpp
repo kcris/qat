@@ -1,12 +1,7 @@
 #include "TreeModel.h"
 
-enum enColumns
-{
-  enColFilename,
-  enColLast
-};
 
-const char* headerColumns[enColLast] =
+const char* headerColumns[TreeModel::enColLast] =
 {
   "File"
 };
