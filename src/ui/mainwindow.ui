@@ -57,8 +57,8 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen_Collection"/>
-    <addaction name="actionAdd_Catalog"/>
+    <addaction name="actionOpenCatalog"/>
+    <addaction name="actionNewCatalog"/>
     <addaction name="separator"/>
     <addaction name="actionOptions"/>
     <addaction name="separator"/>
@@ -84,14 +84,20 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionOpen_Collection">
+  <action name="actionOpenCatalog">
    <property name="text">
-    <string>Open Collection</string>
+    <string>Open Catalog</string>
+   </property>
+   <property name="toolTip">
+    <string>Open Catalog</string>
    </property>
   </action>
-  <action name="actionAdd_Catalog">
+  <action name="actionNewCatalog">
    <property name="text">
-    <string>Add Catalog</string>
+    <string>New Catalog</string>
+   </property>
+   <property name="toolTip">
+    <string>New Catalog</string>
    </property>
   </action>
   <action name="actionQuit">

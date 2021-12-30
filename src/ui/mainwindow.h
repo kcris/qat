@@ -18,8 +18,8 @@ public:
   ~MainWindow();
 
 private slots:
-  void on_actionOpen_Collection_triggered();
-  void on_actionAdd_Catalog_triggered();
+  void on_actionOpenCatalog_triggered();
+  void on_actionNewCatalog_triggered();
   void on_actionOptions_triggered();
   void on_actionContents_triggered();
   void on_actionAbout_triggered();

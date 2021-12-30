@@ -20,6 +20,11 @@ struct TreeModelItem
     removeChilds();
   }
 
+  bool filenameContains(QString expr) const
+  {
+      return m_data.contains(expr);
+  }
+
   TreeModelItem* addChild(const QString & data)
   {
     for (std::vector<TreeModelItem*>::const_iterator it = m_vChildItems.begin(), itEnd = m_vChildItems.end(); it != itEnd; ++it)
