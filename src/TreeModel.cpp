@@ -3,7 +3,7 @@
 
 const char* headerColumns[TreeModel::enColLast] =
 {
-  "File"
+  "Catalog Contents"
 };
 
 /**

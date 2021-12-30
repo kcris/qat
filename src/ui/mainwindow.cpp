@@ -9,6 +9,27 @@
 #include "OptionsDialog.h"
 #include "Catalog.h"
 
+static const QString LOCATEDB_FILEEXT = ".db";
+
+void buildTreePath(TreeModelItem* pParent, const QStringList & paths)
+{
+  TreeModelItem* current = pParent;
+
+  foreach (const QString & path, paths)
+  {
+    TreeModelItem * node = current;
+
+    foreach (const QString & data, path.split("/"))
+    {
+      current = current->addChild(data);
+    }
+
+    current = node;
+  }
+
+  //pParent->accept(new PrintIndentedVisitor(0));
+}
+
 //
 //proxy model that hides some columns inside QFileSystemModel
 //
@@ -17,7 +38,7 @@ struct FSMProxy : public QSortFilterProxyModel
   FSMProxy(QObject *parent) : QSortFilterProxyModel(parent) {}
 
 private:
-  virtual bool filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const
+  virtual bool filterAcceptsColumn(int source_column, const QModelIndex & /*source_parent*/) const
   {
     return source_column == 0; //only show 'Name' column inside the target QFileSystemModel
   }
@@ -25,7 +46,7 @@ private:
   {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
       if (section == 0)
-        return "Collection";
+        return "Browse";
 
     return QVariant();
   }
@@ -47,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
   QFileSystemModel *model = new QFileSystemModel();
   model->setRootPath(QDir::currentPath());
   //model->setFilter(QDir::AllDirs | QDir::Files);
-  model->setNameFilters(QStringList() << "*.db");
+  model->setNameFilters(QStringList() << "*"+LOCATEDB_FILEEXT);
   model->setNameFilterDisables(false);
 
   FSMProxy *proxyModel = new FSMProxy(this);
@@ -60,8 +81,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 
   //selection changes shall trigger a slot
-  connect(ui->treeViewCollection->selectionModel(), SIGNAL(selectionChanged (const QItemSelection &, const QItemSelection &)),
-          this,                                     SLOT(onCollectionChanged(const QItemSelection &, const QItemSelection &)));
+  connect(ui->treeViewCollection->selectionModel(), &QItemSelectionModel::selectionChanged,
+          this,                                     &MainWindow::onCollectionChanged);
 }
 
 MainWindow::~MainWindow()
@@ -71,23 +92,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionOpen_Collection_triggered()
 {
-  //const QString & dir = QFileDialog::getExistingDirectory(this, tr("Open Catalog"), QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-  const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Open Catalog"), QDir::currentPath(), "*.db");
+  const QFileInfo & fi = getBrowsed();
 
-  QMessageBox::information(this, "LocateDb", catalogFile);
+  const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Load Catalog"), fi.absolutePath(), "*"+LOCATEDB_FILEEXT);
 
   const QStringList & paths = loadCatalog(catalogFile);
 
-  showCollection(catalogFile, paths);
+  showCatalogContents(catalogFile, paths);
 }
 
 void MainWindow::on_actionAdd_Catalog_triggered()
 {
-  const QString & fileName = QFileDialog::getSaveFileName(this, tr("Create Catalog"), QDir::currentPath(), tr("Catalog Files (*.db)"));
-
   const QFileInfo & fi = getBrowsed();
 
-  QMessageBox::information(this, "LocateDb", QString("inputDir=%1 output=%2").arg(fi.absolutePath()).arg(fileName));
+  const QString & fileName = QFileDialog::getSaveFileName(this, tr("Save Catalog"), fi.absolutePath(), QString("Catalog Files (*%1)").arg(LOCATEDB_FILEEXT));
 
   saveCatalog(fi.absolutePath(), fileName);
 }
@@ -126,25 +144,6 @@ void MainWindow::on_lineEditFilterContents_returnPressed()
   //filter catalogs contents
 }
 
-void buildTreePath(TreeModelItem* pParent, const QStringList & paths)
-{
-  TreeModelItem* current = pParent;
-
-  foreach (const QString & path, paths)
-  {
-    TreeModelItem * node = current;
-
-    foreach (const QString & data, path.split("/"))
-    {
-      current = current->addChild(data);
-    }
-
-    current = node;
-  }
-
-  //pParent->accept(new PrintIndentedVisitor(0));
-}
-
 QFileInfo MainWindow::getBrowsed()
 {
     const QModelIndex index = ui->treeViewCollection->selectionModel()->currentIndex();
@@ -160,17 +159,17 @@ QFileInfo MainWindow::getBrowsed()
     return fi;
 }
 
-void MainWindow::showCollection(QString inputDir, const QStringList & paths)
+void MainWindow::showCatalogContents(QString catalogFile, const QStringList & catalogPaths)
 {
+    setWindowTitle(catalogFile);
+
     TreeModel* model = dynamic_cast<TreeModel*>(ui->treeViewContents->model());
     model->clear();
 
-    if (!paths.empty())
+    if (!catalogPaths.empty())
     {
-      //model->add(selectedText);
-
-      TreeModelItem* pNewItem = new TreeModelItem(inputDir);
-      buildTreePath(pNewItem, paths);
+      TreeModelItem* pNewItem = new TreeModelItem(catalogFile);
+      buildTreePath(pNewItem, catalogPaths);
       model->add(pNewItem);
     }
 }
@@ -178,33 +177,30 @@ void MainWindow::showCollection(QString inputDir, const QStringList & paths)
 void MainWindow::onCollectionChanged(const QItemSelection & /*newSelection*/, const QItemSelection & /*oldSelection*/)
 {
   //get the text of the selected item
- const QModelIndex index = ui->treeViewCollection->selectionModel()->currentIndex();
- const QString & selectedText = index.data(Qt::DisplayRole).toString();
+//  const QModelIndex index = ui->treeViewCollection->selectionModel()->currentIndex();
+//  const QString & selectedText = index.data(Qt::DisplayRole).toString();
 
- //find out the hierarchy level of the selected item
- int hierarchyLevel = 1;
- QModelIndex seekRoot = index;
- while(seekRoot.parent() != QModelIndex())
- {
-     seekRoot = seekRoot.parent();
-     hierarchyLevel++;
- }
+//  //find out the hierarchy level of the selected item
+//  int hierarchyLevel = 1;
+//  QModelIndex seekRoot = index;
+//  while(seekRoot.parent() != QModelIndex())
+//  {
+//     seekRoot = seekRoot.parent();
+//     hierarchyLevel++;
+//  }
+
+ QApplication::setOverrideCursor(Qt::WaitCursor);
 
  const QFileInfo & fi = getBrowsed();
 
  const QString & filepath = fi.absoluteFilePath();
 
-//#ifndef QT_NO_DEBUG
-//  QStringList paths;
-//  paths.append("x1/x2/x3");
-//  paths.append("x1/x2/x4");
-//  paths.append("x1/x5");
-//#else
- const QStringList & paths = loadCatalog(filepath);
-//#endif
+ const QStringList & paths = filepath.endsWith(LOCATEDB_FILEEXT) ? loadCatalog(filepath) : QStringList();
 
- QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
- setWindowTitle(showString);
+ //QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
+ //setWindowTitle(showString);
 
- showCollection(filepath, paths);
+ showCatalogContents(filepath, paths);
+
+ QApplication::restoreOverrideCursor();
 }

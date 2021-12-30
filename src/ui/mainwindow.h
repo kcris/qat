@@ -32,7 +32,7 @@ private slots:
 
 private:
   QFileInfo getBrowsed();
-  void showCollection(QString inputDir, const QStringList & paths);
+  void showCatalogContents(QString catalogFile, const QStringList & catalogPaths);
 
 private:
   Ui::MainWindow *ui;
