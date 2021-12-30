@@ -92,9 +92,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionOpen_Collection_triggered()
 {
-  const QFileInfo & fi = getBrowsed();
+  const QFileInfo & current = getBrowsed();
 
-  const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Load Catalog"), fi.absolutePath(), "*"+LOCATEDB_FILEEXT);
+  const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Load Catalog"), current.absolutePath(), "*"+LOCATEDB_FILEEXT);
 
   const QStringList & paths = loadCatalog(catalogFile);
 
@@ -103,11 +103,11 @@ void MainWindow::on_actionOpen_Collection_triggered()
 
 void MainWindow::on_actionAdd_Catalog_triggered()
 {
-  const QFileInfo & fi = getBrowsed();
+  const QFileInfo & current = getBrowsed();
 
-  const QString & fileName = QFileDialog::getSaveFileName(this, tr("Save Catalog"), fi.absolutePath(), QString("Catalog Files (*%1)").arg(LOCATEDB_FILEEXT));
+  const QString & catalogFile = QFileDialog::getSaveFileName(this, tr("Save Catalog (%1) as").arg(current.absolutePath()), current.absolutePath(), QString("Catalog Files (*%1)").arg(LOCATEDB_FILEEXT));
 
-  saveCatalog(fi.absolutePath(), fileName);
+  saveCatalog(catalogFile, current.absolutePath());
 }
 
 void MainWindow::on_actionOptions_triggered()
