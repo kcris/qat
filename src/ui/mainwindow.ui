@@ -21,22 +21,118 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayoutBrowse">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <item>
-         <widget class="QTreeView" name="treeViewCollection"/>
+         <widget class="QStackedWidget" name="stackedWidgetBrowse">
+          <widget class="QWidget" name="pageBrowseTree">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QTreeView" name="treeViewBrowse"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="pageBrowseList">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QListView" name="listViewBrowse"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEditFilterCollection"/>
+         <widget class="QLineEdit" name="lineEditFilterBrowse"/>
         </item>
        </layout>
       </widget>
       <widget class="QWidget" name="layoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayoutContents">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <item>
-         <widget class="QTreeView" name="treeViewContents"/>
+         <widget class="QStackedWidget" name="stackedWidgetContents">
+          <widget class="QWidget" name="pageContentsTree">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QTreeView" name="treeViewCatalogContents"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="pageContentsList">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QListView" name="listViewCatalogContents"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEditFilterContents"/>
+         <widget class="QLineEdit" name="lineEditFilterCatalogContents"/>
         </item>
        </layout>
       </widget>
@@ -82,6 +178,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionBrowseList"/>
+   <addaction name="separator"/>
+   <addaction name="actionContentsList"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpenCatalog">
@@ -118,6 +217,22 @@
   <action name="actionOptions">
    <property name="text">
     <string>Options</string>
+   </property>
+  </action>
+  <action name="actionBrowseList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>BrowseList</string>
+   </property>
+  </action>
+  <action name="actionContentsList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ContentsList</string>
    </property>
   </action>
  </widget>

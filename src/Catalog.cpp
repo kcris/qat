@@ -27,17 +27,27 @@
 //  }
 //};
 
-static QStringList runCmd(const QString & cmdLine)
+static QStringList runCmd(QStringList cmdLine)
 {
+    if (cmdLine.isEmpty())
+        return QStringList();
+
+    const QString program = cmdLine.front();
+    cmdLine.pop_front();
+    const QStringList & arguments = cmdLine;
+
     QProcess process;
     process.setProcessChannelMode(QProcess::MergedChannels);
-    process.start(cmdLine, QIODevice::ReadWrite);
+    process.start(program, arguments);
 
     if(!process.waitForStarted(10000))
       throw std::runtime_error("cannot start process");
 
-    if(!process.waitForFinished(60000))
+    if(!process.waitForFinished(120000))
       throw std::runtime_error("cannot finish process");
+
+    if (process.exitStatus() != QProcess::NormalExit)
+        throw std::runtime_error("crashed process: co" + std::to_string(process.exitCode()));
 
     const QByteArray & output = process.readAllStandardOutput();
 
@@ -57,7 +67,13 @@ static QStringList runCmd(const QString & cmdLine)
 static QString getPath(QString path)
 {    
 #ifdef Q_OS_WIN
-    QString cmdLine = QString("wsl wslpath -a -u %1").arg(path);
+    QStringList cmdLine;
+
+    cmdLine << "wsl"
+            << "wslpath"
+            << "-a" //get absolute path
+            << "-u" << path
+    ;
 
     QStringList lines = runCmd(cmdLine);
 
@@ -75,14 +91,17 @@ QStringList saveCatalog(const QString &catalogFile, const QString &dirName)
   QString theInputDir = getPath(dirName);
   QString theLocateDb = getPath(catalogFile);
 
-  const QString cmdLine =
+  QStringList cmdLine;
+  cmdLine
 
 #ifdef Q_OS_WIN
-          QString("wsl ") +
+          << "wsl"
 #endif
-          QString("updatedb --require-visibility 0 -U %1 -o %2")
-            .arg(theInputDir)
-            .arg(theLocateDb);
+          << "updatedb"
+          << "--require-visibility" << "0" //db available to all users
+          << "-U" << theInputDir
+          << "-o" << theLocateDb
+  ;
 
   return runCmd(cmdLine);
 }
@@ -97,12 +116,18 @@ QStringList loadCatalog(const QString & catalogFile)
 
   QString theLocateDb = getPath(catalogFile);
 
-  const QString cmdLine =
+  QStringList cmdLine;
+  cmdLine
+
 #ifdef Q_OS_WIN
-          QString("wsl ") +
+          << "wsl"
 #endif
-          QString("locate -P * -d %1")
-            .arg(theLocateDb);
+          << "locate"
+          << "" //search *all* files inside our database
+          << "-d" << theLocateDb
+  ;
 
   return runCmd(cmdLine);
 }
+
+//locate -S = show statistics

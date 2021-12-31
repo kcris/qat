@@ -23,12 +23,13 @@ private slots:
   void on_actionOptions_triggered();
   void on_actionContents_triggered();
   void on_actionAbout_triggered();
+  void on_actionBrowseList_triggered();
+  void on_actionContentsList_triggered();
 
-  void on_lineEditFilterCollection_returnPressed();
-  void on_lineEditFilterContents_returnPressed();
+  void on_lineEditFilterBrowse_returnPressed();
+  void on_lineEditFilterCatalogContents_returnPressed();
 
-private slots:
-  void onCollectionChanged(const QItemSelection &, const QItemSelection &);
+  void onCurrentDatabaseChanged(const QItemSelection &, const QItemSelection &);
 
 private:
   QFileInfo getBrowsed();
