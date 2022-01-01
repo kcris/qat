@@ -109,7 +109,7 @@ QStringList saveCatalog(const QString &catalogFile, const QString &dirName)
 //
 // load .db catalog file
 //
-QStringList loadCatalog(const QString & catalogFile)
+QStringList loadCatalog(const QString & catalogFile, const QString & expr)
 {
   if (!QFile::exists(catalogFile))
     return QStringList();
@@ -123,7 +123,7 @@ QStringList loadCatalog(const QString & catalogFile)
           << "wsl"
 #endif
           << "locate"
-          << "" //search *all* files inside our database
+          << expr //use "" to search *all* files inside our database
           << "-d" << theLocateDb
   ;
 

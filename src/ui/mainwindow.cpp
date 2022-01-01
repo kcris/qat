@@ -12,29 +12,6 @@
 
 static const QString LOCATEDB_FILEEXT = QStringLiteral(".db");
 
-void buildTreePath(MainWindow* pMainWindow, TreeModelItem* pParent, const QStringList & paths)
-{
-  //const int nTotalEntries = paths.size();
-
-  TreeModelItem* current = pParent;
-
-  //int n = 0;
-  foreach (const QString & path, paths)
-  {
-    //pMainWindow->statusBar()->showMessage(QObject::tr("Loading entry %1/%2").arg(++n).arg(nTotalEntries));
-
-    TreeModelItem * node = current;
-
-    foreach (const QString & data, path.split("/"))
-    {
-      current = current->addChild(data);
-    }
-
-    current = node;
-  }
-
-  //pParent->accept(new PrintIndentedVisitor(0));
-}
 
 //
 // proxy model for our QFileSystemModel (hides some columns inside)
@@ -146,11 +123,14 @@ MainWindow::MainWindow(QWidget *parent)
 
   ui->splitter->setStretchFactor(1, 2);
 
+  //massive perf improvement
+  ui->listViewCatalogContents->setUniformItemSizes(true);
+
   //model for left panel: "browse" treeview
   {
       QFileSystemModel *browseModel = new QFileSystemModel();
       browseModel->setRootPath(QDir::currentPath());
-      //model->setFilter(QDir::AllDirs | QDir::Files);
+      browseModel->setFilter(QDir::AllDirs | QDir::Files);
       browseModel->setNameFilters(QStringList() << "*"+LOCATEDB_FILEEXT);
       browseModel->setNameFilterDisables(false);
 
@@ -183,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   //selection changes shall trigger a slot
   connect(ui->treeViewBrowse->selectionModel(), &QItemSelectionModel::selectionChanged,
-          this,                                 &MainWindow::onCurrentDatabaseChanged);
+          this,                                 &MainWindow::onCurrentBrowsedChanged);
 }
 
 MainWindow::~MainWindow()
@@ -197,13 +177,18 @@ void MainWindow::on_actionOpenCatalog_triggered()
 
   const QString & catalogFile = QFileDialog::getOpenFileName(this, tr("Load Catalog"), current.absolutePath(), "*"+LOCATEDB_FILEEXT);
 
-  QApplication::setOverrideCursor(Qt::WaitCursor);
+  if (catalogFile.isEmpty())
+      return;
 
-  const QStringList & paths = loadCatalog(catalogFile);
+  this->loadCatalog(catalogFile, "");
 
-  showCatalogContents(catalogFile, paths);
+//  QApplication::setOverrideCursor(Qt::WaitCursor);
 
-  QApplication::restoreOverrideCursor();
+//  const QStringList & paths = ::loadCatalog(catalogFile, "");
+
+//  showCatalogContents(catalogFile, paths);
+
+//  QApplication::restoreOverrideCursor();
 }
 
 void MainWindow::on_actionNewCatalog_triggered()
@@ -212,9 +197,12 @@ void MainWindow::on_actionNewCatalog_triggered()
 
   const QString & catalogFile = QFileDialog::getSaveFileName(this, tr("Save Catalog (%1) as").arg(current.absolutePath()), current.absolutePath(), QString("Catalog Files (*%1)").arg(LOCATEDB_FILEEXT));
 
+  if (catalogFile.isEmpty())
+      return;
+
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
-  saveCatalog(catalogFile, current.absolutePath());
+  saveCatalog(catalogFile, current.filePath());
 
   QApplication::restoreOverrideCursor();
 }
@@ -236,6 +224,20 @@ void MainWindow::on_actionContents_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
   //about
+}
+
+void MainWindow::on_actionBrowseList_triggered()
+{
+    bool useBrowseList = ui->actionBrowseList->isChecked();
+
+    ui->stackedWidgetBrowse->setCurrentIndex(useBrowseList ? 1 : 0);
+}
+
+void MainWindow::on_actionContentsList_triggered()
+{
+    bool useContentsList = ui->actionContentsList->isChecked();
+
+    ui->stackedWidgetContents->setCurrentIndex(useContentsList ? 1 : 0);
 }
 
 void MainWindow::on_lineEditFilterBrowse_returnPressed()
@@ -265,7 +267,7 @@ void MainWindow::on_lineEditFilterCatalogContents_returnPressed()
     //TreeModel* pModel = dynamic_cast<TreeModel*>(pProxyModel1->sourceModel());
     //Q_ASSERT(pModel);
 
-    pProxyModel1->setFilenameFilterExpression(expr);  //customize filtering
+    //pProxyModel1->setFilenameFilterExpression(expr);  //DISABLED customize filtering
 
     //
     // list view
@@ -273,7 +275,75 @@ void MainWindow::on_lineEditFilterCatalogContents_returnPressed()
     CatalogListProxyModel* pProxyModel2 = dynamic_cast<CatalogListProxyModel*>(ui->listViewCatalogContents->model());
     Q_ASSERT(pProxyModel2);
 
-    pProxyModel2->setFilenameFilterExpression(expr);
+    //pProxyModel2->setFilenameFilterExpression(expr); //DISABLED customize filtering
+}
+
+void MainWindow::on_lineEditFilterCatalogContents_textChanged(const QString & text)
+{
+    //some models are large ?? -> filtering is consuming -> only do it if enough data in the filter expression
+    //if (text.length() < 3)
+    //    return;
+
+    //on_lineEditFilterCatalogContents_returnPressed(); //use same impl as above
+
+    const QFileInfo & fi = getBrowsed();
+
+    this->loadCatalog(fi.absoluteFilePath(), text);
+}
+
+void MainWindow::loadCatalog(const QString & catalogFile, const QString & expr)
+{
+    Q_ASSERT(catalogFile.endsWith(LOCATEDB_FILEEXT));
+
+    statusBar()->showMessage(tr("Opening catalog"));
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    const QStringList & paths = ::loadCatalog(catalogFile, expr);
+
+    //QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
+    //setWindowTitle(showString);
+
+    statusBar()->showMessage(tr("Loading catalog"));
+
+    loadCatalogModels(catalogFile, expr, paths);
+
+    QApplication::restoreOverrideCursor();
+}
+
+void MainWindow::loadCatalogModels(QString catalogFile, QString expr, const QStringList & catalogPaths)
+{
+    setWindowTitle(QString("%1 (%2, %3 entries)")
+                   .arg(catalogFile)
+                   .arg(expr.isEmpty() ? "*" : expr) //filter expr
+                   .arg(catalogPaths.size()));
+
+    //
+    // treeview
+    //
+    CatalogProxyModel* pProxyModel1 = dynamic_cast<CatalogProxyModel*>(ui->treeViewCatalogContents->model());
+    Q_ASSERT(pProxyModel1);
+
+    TreeModel* pTreeModel = dynamic_cast<TreeModel*>(pProxyModel1->sourceModel());
+    Q_ASSERT(pTreeModel);
+
+    //::loadModelFromPaths(*pTreeModel, catalogPaths, catalogFile); //DISABLED
+
+    //auto expand
+    //ui->treeViewCatalogContents->expandAll();
+
+    //
+    // list view
+    //
+    CatalogListProxyModel* pProxyModel2 = dynamic_cast<CatalogListProxyModel*>(ui->listViewCatalogContents->model());
+    Q_ASSERT(pProxyModel2);
+
+    QStringListModel* pListModel = dynamic_cast<QStringListModel*>(pProxyModel2->sourceModel());
+    Q_ASSERT(pListModel);
+
+    //pListModel->beginResetModel();
+    pListModel->setStringList(catalogPaths);
+    //pListModel->endResetModel();
 }
 
 QFileInfo MainWindow::getBrowsed()
@@ -291,46 +361,7 @@ QFileInfo MainWindow::getBrowsed()
     return fi;
 }
 
-void MainWindow::showCatalogContents(QString catalogFile, const QStringList & catalogPaths)
-{
-    setWindowTitle(QString("%1 (%2 entries)").arg(catalogFile).arg(catalogPaths.size()));
-
-    //
-    // treeview
-    //
-    CatalogProxyModel* pProxyModel1 = dynamic_cast<CatalogProxyModel*>(ui->treeViewCatalogContents->model());
-    Q_ASSERT(pProxyModel1);
-
-    TreeModel* pTreeModel = dynamic_cast<TreeModel*>(pProxyModel1->sourceModel());
-    Q_ASSERT(pTreeModel);
-
-    pTreeModel->clear();
-
-    if (!catalogPaths.empty())
-    {
-      TreeModelItem* pNewItem = new TreeModelItem(catalogFile);
-      buildTreePath(this, pNewItem, catalogPaths);
-
-      pTreeModel->add(pNewItem);
-    }
-
-    //auto expand
-    ui->treeViewCatalogContents->expandAll();
-
-
-    //
-    // list view
-    //
-    CatalogListProxyModel* pProxyModel2 = dynamic_cast<CatalogListProxyModel*>(ui->listViewCatalogContents->model());
-    Q_ASSERT(pProxyModel2);
-
-    QStringListModel* pListModel = dynamic_cast<QStringListModel*>(pProxyModel2->sourceModel());
-    Q_ASSERT(pListModel);
-
-    pListModel->setStringList(catalogPaths);
-}
-
-void MainWindow::onCurrentDatabaseChanged(const QItemSelection & /*newSelection*/, const QItemSelection & /*oldSelection*/)
+void MainWindow::onCurrentBrowsedChanged(const QItemSelection & /*newSelection*/, const QItemSelection & /*oldSelection*/)
 {
   //get the text of the selected item
 //  const QModelIndex index = ui->treeViewCollection->selectionModel()->currentIndex();
@@ -347,34 +378,9 @@ void MainWindow::onCurrentDatabaseChanged(const QItemSelection & /*newSelection*
 
  const QFileInfo & fi = getBrowsed();
 
- const QString & filepath = fi.absoluteFilePath();
+ if (!fi.absoluteFilePath().endsWith(LOCATEDB_FILEEXT))
+     return;
 
- statusBar()->showMessage(tr("Opening catalog"));
-
- QApplication::setOverrideCursor(Qt::WaitCursor);
-
- const QStringList & paths = filepath.endsWith(LOCATEDB_FILEEXT) ? loadCatalog(filepath) : QStringList();
-
- //QString showString = QString("%1 / %2 entries / Level %3").arg(selectedText).arg(paths.size()).arg(hierarchyLevel);
- //setWindowTitle(showString);
-
- statusBar()->showMessage(tr("Loading catalog"));
-
- showCatalogContents(filepath, paths);
-
- QApplication::restoreOverrideCursor();
+ this->loadCatalog(fi.absoluteFilePath(), "");
 }
 
-void MainWindow::on_actionBrowseList_triggered()
-{
-    bool useBrowseList = ui->actionBrowseList->isChecked();
-
-    ui->stackedWidgetBrowse->setCurrentIndex(useBrowseList ? 1 : 0);
-}
-
-void MainWindow::on_actionContentsList_triggered()
-{
-    bool useContentsList = ui->actionContentsList->isChecked();
-
-    ui->stackedWidgetContents->setCurrentIndex(useContentsList ? 1 : 0);
-}

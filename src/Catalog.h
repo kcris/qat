@@ -6,7 +6,7 @@
 //write catalog file (will contain: all paths inside the specified dir)
 QStringList saveCatalog(const QString & catalogFile, const QString & dirName);
 
-//read catalog file (return a list of paths)
-QStringList loadCatalog(const QString & catalogFile);
+//load catalog file (return a list of paths the locate expr)
+QStringList loadCatalog(const QString & catalogFile, const QString & expr = QString(""));
 
 #endif // CATALOG_H

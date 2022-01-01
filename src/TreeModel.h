@@ -40,4 +40,6 @@ private:
   Private* m_priv;
 };
 
+void loadModelFromPaths(TreeModel& model, const QStringList & paths, const QString & rootName);
+
 #endif //TREEMODEL_H

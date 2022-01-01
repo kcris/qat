@@ -28,12 +28,14 @@ private slots:
 
   void on_lineEditFilterBrowse_returnPressed();
   void on_lineEditFilterCatalogContents_returnPressed();
-
-  void onCurrentDatabaseChanged(const QItemSelection &, const QItemSelection &);
+  void on_lineEditFilterCatalogContents_textChanged(const QString &arg1);
 
 private:
+  void loadCatalog(const QString & catalogFile, const QString & expr);
+  void loadCatalogModels(QString catalogFile, QString expr, const QStringList & catalogPaths);
+
   QFileInfo getBrowsed();
-  void showCatalogContents(QString catalogFile, const QStringList & catalogPaths);
+  void onCurrentBrowsedChanged(const QItemSelection &, const QItemSelection &);
 
 private:
   Ui::MainWindow *ui;

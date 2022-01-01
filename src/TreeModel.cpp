@@ -174,3 +174,48 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
 
   return false;
 }
+
+
+//
+// helper methods
+//
+static void buildTreePath(TreeModelItem* pParent, const QStringList & paths)
+{
+  //const int nTotalEntries = paths.size();
+
+  TreeModelItem* current = pParent;
+
+  //int n = 0;
+  foreach (const QString & path, paths)
+  {
+    //pMainWindow->statusBar()->showMessage(QObject::tr("Loading entry %1/%2").arg(++n).arg(nTotalEntries));
+
+    TreeModelItem * node = current;
+
+    foreach (const QString & data, path.split("/"))
+    {
+      current = current->addChild(data);
+    }
+
+    current = node;
+  }
+
+  //pParent->accept(new PrintIndentedVisitor(0));
+}
+
+//
+// global methods
+//
+void loadModelFromPaths(TreeModel& model, const QStringList & paths, const QString & rootName)
+{
+    model.clear();
+
+    if (!paths.empty())
+    {
+      TreeModelItem* pNewItem = new TreeModelItem(rootName);
+      buildTreePath(pNewItem, paths);
+
+      model.add(pNewItem);
+    }
+}
+
